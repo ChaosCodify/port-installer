@@ -1,0 +1,16 @@
+{
+  "identifier": "default",
+  "description": "Default capabilities for Portable Installer",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:default",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "dialog:allow-message",
+    "dialog:allow-ask",
+    "dialog:allow-confirm",
+    "shell:default",
+    "shell:allow-open"
+  ]
+}

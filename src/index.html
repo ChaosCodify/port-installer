@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portable Installer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 200px;
+      min-height: 100vh;
+      background: #16213e;
+      padding: 20px 0;
+      border-right: 1px solid #0f3460;
+      flex-shrink: 0;
+    }
+
+    .sidebar h1 {
+      font-size: 16px;
+      padding: 0 20px 20px;
+      border-bottom: 1px solid #0f3460;
+      color: #e94560;
+    }
+
+    .nav-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .nav-item:hover {
+      background: #0f3460;
+    }
+
+    .nav-item.active {
+      background: #e94560;
+      color: white;
+    }
+
+    .main {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+      height: 100vh;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .header h2 {
+      font-size: 24px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #e94560;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #c73852;
+    }
+
+    .btn-secondary {
+      background: #0f3460;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #1a4a7a;
+    }
+
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c82333;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .app-list {
+      display: grid;
+      gap: 15px;
+    }
+
+    .app-card {
+      background: #16213e;
+      border-radius: 10px;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #0f3460;
+    }
+
+    .app-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .app-icon {
+      width: 48px;
+      height: 48px;
+      background: #0f3460;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .app-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .app-name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .app-path {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .app-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal {
+      background: #16213e;
+      border-radius: 12px;
+      padding: 30px;
+      width: 500px;
+      max-width: 90%;
+      border: 1px solid #0f3460;
+    }
+
+    .modal h3 {
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #aaa;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 15px;
+      background: #1a1a2e;
+      border: 1px solid #0f3460;
+      border-radius: 6px;
+      color: white;
+      font-size: 14px;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #e94560;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 15px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 25px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+
+    .empty-state h3 {
+      margin-bottom: 10px;
+      color: #888;
+    }
+
+    .settings-card {
+      background: #16213e;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #0f3460;
+    }
+
+    .settings-card h3 {
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .settings-option {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #0f3460;
+    }
+
+    .settings-option:last-child {
+      border-bottom: none;
+    }
+
+    .settings-option-info {
+      flex: 1;
+    }
+
+    .settings-option-title {
+      font-weight: 500;
+    }
+
+    .settings-option-desc {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .scan-section {
+      background: #0f3460;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+
+    .scan-results {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+
+    .scan-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: #16213e;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .scan-item-name {
+      font-size: 13px;
+    }
+
+    .scan-item-path {
+      font-size: 11px;
+      color: #888;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .badge-success {
+      background: #28a745;
+      color: white;
+    }
+
+    .badge-info {
+      background: #17a2b8;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <nav class="sidebar">
+      <h1>Portable Installer</h1>
+      <div class="nav-item active" onclick="showSection('apps', this)">Installed Apps</div>
+      <div class="nav-item" onclick="showSection('install', this)">Install New</div>
+      <div class="nav-item" onclick="showSection('settings', this)">Settings</div>
+    </nav>
+
+    <main class="main">
+      <!-- Installed Apps Section -->
+      <div id="apps-section" class="section">
+        <div class="header">
+          <h2>Installed Apps</h2>
+        </div>
+        <div id="app-list" class="app-list">
+          <div class="empty-state">
+            <h3>No apps installed</h3>
+            <p>Click "Install New" to add your first app</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Install New Section -->
+      <div id="install-section" class="section" style="display: none;">
+        <div class="header">
+          <h2>Install New App</h2>
+        </div>
+        <button class="btn btn-primary" onclick="showInstallModal()">
+          + Browse for App
+        </button>
+
+        <div class="scan-section">
+          <h3>Or scan a folder for apps</h3>
+          <p style="font-size: 13px; color: #888; margin-bottom: 10px;">
+            Select a folder to scan for .exe, .bat, .cmd, or .ps1 files
+          </p>
+          <button class="btn btn-secondary" onclick="scanFolder()">
+            Select Folder to Scan
+          </button>
+          <div id="scan-results" class="scan-results"></div>
+        </div>
+      </div>
+
+      <!-- Settings Section -->
+      <div id="settings-section" class="section" style="display: none;">
+        <div class="header">
+          <h2>Settings</h2>
+        </div>
+
+        <div class="settings-card">
+          <h3>Data Storage</h3>
+          <div class="settings-option">
+            <div class="settings-option-info">
+              <div class="settings-option-title">Storage Mode</div>
+              <div class="settings-option-desc">
+                Choose where to store the list of installed apps
+              </div>
+            </div>
+            <select id="storage-mode" onchange="updateStorageMode()">
+              <option value="appdata">AppData (Recommended)</option>
+              <option value="portable">Portable (Next to .exe)</option>
+            </select>
+          </div>
+          <div class="settings-option">
+            <div class="settings-option-info">
+              <div class="settings-option-title" id="about-title">About</div>
+              <div class="settings-option-desc" id="about-desc">
+                Portable Installer v0.1.0 - Add apps to Start Menu without installing
+              </div>
+            </div>
+          </div>
+          <!-- Debug toggle - only visible when debug enabled -->
+          <div class="settings-option" id="debug-toggle-row" style="display: none; border-top: 1px solid #e94560; padding-top: 15px; margin-top: 5px;">
+            <div class="settings-option-info">
+              <div class="settings-option-title" style="color: #e94560;">Debug Mode</div>
+              <div class="settings-option-desc">
+                Logs are saved to <code>logs/</code> folder next to the .exe
+              </div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="toggleDebugMode()">Turn Off</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" style="
+    position: fixed; top: 20px; right: 20px; padding: 12px 20px;
+    background: #16213e; border: 1px solid #0f3460; border-radius: 8px;
+    color: #e0e0e0; font-size: 14px; z-index: 200;
+    transform: translateX(120%); transition: transform 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  ">
+    <span id="toast-msg"></span>
+  </div>
+
+  <!-- Install Modal -->
+  <div id="install-modal" class="modal-overlay" style="display: none;">
+    <div class="modal">
+      <h3>Install App</h3>
+      <div class="form-group">
+        <label>App Name</label>
+        <input type="text" id="app-name" placeholder="My App">
+      </div>
+      <div class="form-group">
+        <label>Executable Path</label>
+        <div style="display: flex; gap: 10px;">
+          <input type="text" id="app-path" placeholder="C:\path\to\app.exe" readonly style="flex: 1;">
+          <button class="btn btn-secondary" onclick="browseForFile()">Browse</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Icon Path (optional)</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="app-icon" placeholder="C:\path\to\icon.ico" style="flex: 1;">
+            <button class="btn btn-secondary" onclick="browseForIcon()">Browse</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Arguments (optional)</label>
+        <input type="text" id="app-args" placeholder="--flag value">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeInstallModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="installApp()">Install</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log Panel (hidden unless debug mode) -->
+  <div id="log-panel" style="
+    display: none;
+    position: fixed; bottom: 0; left: 200px; right: 0; height: 150px;
+    background: #0a0a1a; border-top: 1px solid #0f3460; overflow-y: auto;
+    font-family: 'Consolas', monospace; font-size: 11px; padding: 8px; z-index: 50;
+  ">
+    <div style="color: #666; margin-bottom: 4px;">--- LOG (DEBUG MODE) ---</div>
+    <div id="log-entries"></div>
+  </div>
+
+  <script>
+    // ---- DEBUG MODE ----
+    let debugMode = false;
+    let aboutClicks = 0;
+    let aboutClickTimer = null;
+    let logBuffer = '';
+
+    // ---- TOAST ----
+    function showToast(msg, duration = 3000) {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-msg').textContent = msg;
+      t.style.transform = 'translateX(0)';
+      setTimeout(() => { t.style.transform = 'translateX(120%)'; }, duration);
+    }
+
+    // ---- LOGGING ----
+    const logEntries = document.getElementById('log-entries');
+    const logPanel = document.getElementById('log-panel');
+
+    function log(msg, level = 'INFO') {
+      const ts = new Date().toLocaleTimeString();
+      const line = `[${ts}] [${level}] ${msg}`;
+      console.log(`[PortableInstaller] ${line}`);
+
+      if (debugMode) {
+        // Show in panel
+        const el = document.createElement('div');
+        const colors = { INFO: '#888', OK: '#4caf50', WARN: '#ff9800', ERR: '#f44336', DEBUG: '#2196f3' };
+        el.style.color = colors[level] || '#888';
+        el.textContent = line;
+        logEntries.appendChild(el);
+        logEntries.parentElement.scrollTop = logEntries.parentElement.scrollHeight;
+
+        // Buffer for file write
+        logBuffer += line + '\n';
+        flushLog();
+      }
+    }
+
+    async function flushLog() {
+      if (!debugMode || !logBuffer) return;
+      const toWrite = logBuffer;
+      logBuffer = '';
+      try {
+        await invoke('write_log', { contents: toWrite });
+      } catch (e) {
+        // silent - don't recurse
+      }
+    }
+
+    // ---- DEBUG MODE TOGGLE ----
+    function enableDebugMode() {
+      debugMode = true;
+      logPanel.style.display = 'block';
+      document.getElementById('debug-toggle-row').style.display = 'flex';
+      showToast('Debug mode enabled');
+      log('Debug mode ENABLED', 'OK');
+    }
+
+    function disableDebugMode() {
+      debugMode = false;
+      logPanel.style.display = 'none';
+      document.getElementById('debug-toggle-row').style.display = 'none';
+      showToast('Debug mode disabled');
+    }
+
+    function toggleDebugMode() {
+      if (debugMode) disableDebugMode();
+      else enableDebugMode();
+    }
+
+    // About click handler (7 clicks to unlock)
+    document.getElementById('about-title').parentElement.parentElement.addEventListener('click', () => {
+      aboutClicks++;
+      if (aboutClickTimer) clearTimeout(aboutClickTimer);
+      aboutClickTimer = setTimeout(() => { aboutClicks = 0; }, 2000);
+
+      if (aboutClicks >= 7) {
+        aboutClicks = 0;
+        if (!debugMode) enableDebugMode();
+        else showToast('Debug mode is already on');
+      } else if (aboutClicks >= 5) {
+        showToast(`Keep clicking... (${7 - aboutClicks} more)`);
+      }
+    });
+
+    // ---- TAURI GLOBALS ----
+    const invoke = (window.__TAURI__ && window.__TAURI__.core && window.__TAURI__.core.invoke)
+      ? window.__TAURI__.core.invoke
+      : async () => { throw new Error('invoke not available'); };
+
+    const open = (window.__TAURI__ && window.__TAURI__.dialog && window.__TAURI__.dialog.open)
+      ? window.__TAURI__.dialog.open
+      : async () => { throw new Error('dialog.open not available'); };
+
+    log('invoke: ' + typeof invoke, typeof invoke === 'function' ? 'OK' : 'ERR');
+    log('open: ' + typeof open, typeof open === 'function' ? 'OK' : 'ERR');
+
+    let currentStorageMode = 'appdata';
+    let installedApps = [];
+
+    // ---- DIALOG HELPERS ----
+    async function openFileDialog() {
+      log('openFileDialog called', 'INFO');
+      try {
+        const result = await open({ title: 'Select File', multiple: false });
+        log('Dialog returned: ' + JSON.stringify(result), 'OK');
+        return result;
+      } catch (e) {
+        log('Dialog error: ' + e.message, 'ERR');
+        return null;
+      }
+    }
+
+    async function openFolderDialog() {
+      log('openFolderDialog called', 'INFO');
+      try {
+        const result = await open({ title: 'Select Folder', directory: true, multiple: false });
+        log('Folder dialog returned: ' + JSON.stringify(result), 'OK');
+        return result;
+      } catch (e) {
+        log('Folder dialog error: ' + e.message, 'ERR');
+        return null;
+      }
+    }
+
+    // ---- INIT ----
+    async function init() {
+      log('init() called', 'INFO');
+      try {
+        currentStorageMode = await invoke('get_storage_mode');
+        log('Storage mode: ' + currentStorageMode, 'OK');
+        document.getElementById('storage-mode').value = currentStorageMode;
+        await loadApps();
+      } catch (e) {
+        log('init error: ' + e.message, 'ERR');
+      }
+    }
+
+    // ---- NAVIGATION ----
+    function showSection(section, el) {
+      log('showSection: ' + section, 'INFO');
+      document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(`${section}-section`).style.display = 'block';
+      if (el) el.classList.add('active');
+      else document.querySelector(`.nav-item[onclick*="${section}"]`).classList.add('active');
+    }
+
+    // ---- APPS ----
+    async function loadApps() {
+      log('loadApps() called', 'INFO');
+      try {
+        installedApps = await invoke('get_installed_apps', { storageMode: currentStorageMode });
+        log('Loaded ' + installedApps.length + ' apps', 'OK');
+        renderApps();
+      } catch (e) {
+        log('loadApps error: ' + e.message, 'ERR');
+      }
+    }
+
+    function renderApps() {
+      const container = document.getElementById('app-list');
+      if (installedApps.length === 0) {
+        container.innerHTML = '<div class="empty-state"><h3>No apps installed</h3><p>Click "Install New" to add your first app</p></div>';
+        return;
+      }
+      container.innerHTML = installedApps.map(app => `
+        <div class="app-card" id="card-${app.id}">
+          <div class="app-info">
+            <div class="app-icon" id="icon-${app.id}">📦</div>
+            <div>
+              <div class="app-name">${app.name}</div>
+              <div class="app-path">${app.executable_path}</div>
+            </div>
+          </div>
+          <div class="app-actions">
+            <button class="btn btn-secondary btn-sm" onclick="launchApp('${app.id}')">Launch</button>
+            <button class="btn btn-danger btn-sm" onclick="uninstallApp('${app.id}')">Uninstall</button>
+          </div>
+        </div>
+      `).join('');
+      // Load exe icons async
+      installedApps.forEach(app => loadExeIcon(app.id, app.executable_path));
+    }
+
+    async function loadExeIcon(id, exePath) {
+      try {
+        const dataUrl = await invoke('extract_icon', { exePath });
+        const el = document.getElementById('icon-' + id);
+        if (el && dataUrl && dataUrl.startsWith('data:')) {
+          el.innerHTML = '<img src="' + dataUrl + '" onerror="this.parentElement.textContent=\'📦\'">';
+        }
+      } catch (e) {
+        // keep default 📦
+      }
+    }
+
+    // ---- INSTALL MODAL ----
+    function showInstallModal() {
+      log('showInstallModal', 'INFO');
+      document.getElementById('install-modal').style.display = 'flex';
+    }
+
+    function closeInstallModal() {
+      document.getElementById('install-modal').style.display = 'none';
+      document.getElementById('app-name').value = '';
+      document.getElementById('app-path').value = '';
+      document.getElementById('app-icon').value = '';
+      document.getElementById('app-args').value = '';
+    }
+
+    // ---- BROWSE ----
+    async function browseForFile() {
+      log('browseForFile clicked', 'INFO');
+      const selected = await openFileDialog();
+      if (selected) {
+        const path = typeof selected === 'string' ? selected : (selected.path || selected);
+        log('Selected file: ' + path, 'OK');
+        document.getElementById('app-path').value = path;
+        const name = path.split('\\').pop().split('/').pop().replace(/\.[^/.]+$/, '');
+        document.getElementById('app-name').value = name;
+        log('Auto-filled name: ' + name, 'DEBUG');
+      } else {
+        log('No file selected', 'WARN');
+      }
+    }
+
+    async function browseForIcon() {
+      log('browseForIcon clicked', 'INFO');
+      const selected = await openFileDialog();
+      if (selected) {
+        const path = typeof selected === 'string' ? selected : (selected.path || selected);
+        document.getElementById('app-icon').value = path;
+        log('Selected icon: ' + path, 'OK');
+      }
+    }
+
+    // ---- INSTALL ----
+    async function installApp() {
+      const name = document.getElementById('app-name').value;
+      const path = document.getElementById('app-path').value;
+      const icon = document.getElementById('app-icon').value || null;
+      const args = document.getElementById('app-args').value || null;
+      log('installApp: name=' + name + ' path=' + path, 'INFO');
+      if (!name || !path) { alert('Please provide app name and path'); return; }
+      try {
+        await invoke('install_app', { name, executablePath: path, iconPath: icon, args, storageMode: currentStorageMode, pinToTaskbar: false });
+        log('App installed successfully', 'OK');
+        closeInstallModal();
+        await loadApps();
+        showSection('apps');
+      } catch (error) {
+        log('Install failed: ' + error, 'ERR');
+        alert('Failed to install app: ' + error);
+      }
+    }
+
+    // ---- UNINSTALL ----
+    async function uninstallApp(appId) {
+      log('uninstallApp: ' + appId, 'INFO');
+      if (!confirm('Are you sure you want to uninstall this app?')) return;
+      try {
+        await invoke('uninstall_app', { appId, storageMode: currentStorageMode });
+        log('App uninstalled', 'OK');
+        await loadApps();
+      } catch (error) { log('Uninstall failed: ' + error, 'ERR'); }
+    }
+
+    // ---- LAUNCH ----
+    async function launchApp(appId) {
+      log('launchApp: ' + appId, 'INFO');
+      const app = installedApps.find(a => a.id === appId);
+      if (app) {
+        try {
+          await invoke('launch_app', { path: app.executable_path });
+          log('Launched ' + app.executable_path, 'OK');
+        } catch (e) { log('Launch failed: ' + e.message, 'ERR'); }
+      }
+    }
+
+    // ---- STORAGE MODE ----
+    async function updateStorageMode() {
+      const newMode = document.getElementById('storage-mode').value;
+      log('updateStorageMode: ' + newMode, 'INFO');
+      try {
+        await invoke('set_storage_mode', { mode: newMode });
+        currentStorageMode = newMode;
+        await loadApps();
+        log('Storage mode updated', 'OK');
+      } catch (error) { log('Storage mode update failed: ' + error, 'ERR'); }
+    }
+
+    // ---- SCAN FOLDER ----
+    async function scanFolder() {
+      log('scanFolder clicked', 'INFO');
+      const selected = await openFolderDialog();
+      if (selected) {
+        const path = typeof selected === 'string' ? selected : (selected.path || selected);
+        log('Scanning folder: ' + path, 'INFO');
+        try {
+          const apps = await invoke('scan_folder_for_apps', { folderPath: path });
+          log('Found ' + apps.length + ' apps', 'OK');
+          renderScanResults(apps);
+        } catch (error) { log('Scan failed: ' + error, 'ERR'); }
+      }
+    }
+
+    function renderScanResults(apps) {
+      const container = document.getElementById('scan-results');
+      if (apps.length === 0) {
+        container.innerHTML = '<p style="color: #888; font-size: 13px;">No apps found in this folder</p>';
+        return;
+      }
+      container.innerHTML = apps.map(app => `
+        <div class="scan-item">
+          <div>
+            <div class="scan-item-name">${app.name}</div>
+            <div class="scan-item-path">${app.path}</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="installScannedApp('${app.name}', '${app.path.replace(/\\/g, '\\\\')}')">Install</button>
+        </div>
+      `).join('');
+    }
+
+    function installScannedApp(name, path) {
+      document.getElementById('app-name').value = name;
+      document.getElementById('app-path').value = path;
+      showInstallModal();
+    }
+
+    // ---- START ----
+    init();
+  </script>
+</body>
+</html>

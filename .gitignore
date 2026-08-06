@@ -1,0 +1,36 @@
+# --- gh-sync generated ---
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+out/
+release/
+*.exe
+*.dll
+*.pdb
+*.zip
+win-unpacked/
+
+# Rust / Tauri
+target/
+src-tauri/target/
+gen/
+
+# Logs & temp
+*.log
+logs/
+tmp/
+temp/
+
+# Env / secrets
+.env
+.env.*
+
+# Editor / OS
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

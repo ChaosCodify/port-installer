@@ -1,0 +1,14 @@
+{
+  "name": "portable-installer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/plugin-dialog": "^2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}
