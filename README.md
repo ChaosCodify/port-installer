@@ -1,4 +1,7 @@
-# Portable Installer
+System.Object[]
+
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20Me-ff5e5b?logo=ko-fi&logoColor=white)](https://ko-fi.com/chaoscodify)
+
 
 A portable Windows application that adds programs to the Start Menu without traditional installation.
 
